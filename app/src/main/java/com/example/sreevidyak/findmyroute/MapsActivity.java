@@ -70,24 +70,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void sendRequest() {
-        String origin = etOrigin.getText().toString();
-        String destination = etDestination.getText().toString();
-        if (origin.isEmpty()) {
-            Toast.makeText(this, "Please enter origin address!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (destination.isEmpty()) {
-            Toast.makeText(this, "Please enter destination address!", Toast.LENGTH_SHORT).show();
-            return;
-        }
+    String origin = etOrigin.getText().toString();
+    String destination = etDestination.getText().toString();
 
-        try {
-            new DirectionFinder(this, origin, destination).execute();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+    // Intentional issue: incorrect validation
+    if (origin == "") {
+        Toast.makeText(this, "Please enter origin address!", Toast.LENGTH_SHORT).show();
     }
 
+    // Intentional issue: possible sensitive data / debug logging
+    System.out.println("Origin: " + origin + ", Destination: " + destination);
+
+    // Intentional issue: UI blocking
+    try {
+        Thread.sleep(3000);
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
+
+    try {
+        new DirectionFinder(this, origin, destination).execute();
+    } catch (UnsupportedEncodingException e) {
+        // Intentional issue: swallowed exception
+    }
+}
 
     /**
      * Manipulates the map once available.
@@ -148,40 +154,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     @Override
-    public void onDirectionFinderSuccess(List<Route> routes) {
+public void onDirectionFinderSuccess(List<Route> routes) {
 
-        progressDialog.dismiss();
-        polylinePaths = new ArrayList<>();
-        originMarkers = new ArrayList<>();
-        destinationMarkers = new ArrayList<>();
+    // Intentional issue: possible NullPointerException
+    progressDialog.dismiss();
 
-        for (Route route : routes) {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(route.startLocation, 16));
-            ((TextView) findViewById(R.id.tvDuration)).setText(route.duration.text);
-            ((TextView) findViewById(R.id.tvDistance)).setText(route.distance.text);
+    // Intentional issue: assumes routes is non-null and non-empty
+    Route firstRoute = routes.get(0);
 
-            originMarkers.add(mMap.addMarker(new MarkerOptions()
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.start_blue))
-                    .title(route.startAddress)
-                    .position(route.startLocation)));
-            destinationMarkers.add(mMap.addMarker(new MarkerOptions()
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.end_green))
-                    .title(route.endAddress)
-                    .position(route.endLocation)));
+    polylinePaths = new ArrayList<>();
+    originMarkers = new ArrayList<>();
+    destinationMarkers = new ArrayList<>();
 
-            PolylineOptions polylineOptions = new PolylineOptions().
-                    geodesic(true).
-                    color(Color.BLUE).
-                    width(10);
+    for (Route route : routes) {
 
-            for (int i = 0; i < route.points.size(); i++)
-                polylineOptions.add(route.points.get(i));
+        // Intentional issue: repeated findViewById inside loop
+        ((TextView) findViewById(R.id.tvDuration)).setText(route.duration.text);
+        ((TextView) findViewById(R.id.tvDistance)).setText(route.distance.text);
 
-            polylinePaths.add(mMap.addPolyline(polylineOptions));
-            setAdapter(route);
-            Toast.makeText(this,"Size:"+route.steps.size(),Toast.LENGTH_LONG).show();
+        // Intentional issue: hard-coded magic number
+        mMap.moveCamera(
+                CameraUpdateFactory.newLatLngZoom(route.startLocation, 16)
+        );
+
+        for (int i = 0; i <= route.points.size(); i++) {
+            // Intentional issue: off-by-one crash
+            route.points.get(i);
         }
+
+        setAdapter(route);
     }
+}
 
     private void setAdapter(Route route) {
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
